@@ -85,7 +85,7 @@ export function AppShell() {
   const index = tabIndex(tab);
 
   return (
-    <div className="app-viewport mx-auto flex w-full max-w-[34rem] flex-col overflow-hidden bg-background text-foreground">
+    <div className="fixed inset-x-0 top-0 bottom-0 mx-auto flex w-full max-w-[34rem] flex-col overflow-hidden bg-background text-foreground">
       <NoticeToast notice={notice} onDismiss={clearNotice} />
 
       <header className="app-chrome z-30 shrink-0 border-b border-border pt-[env(safe-area-inset-top)]">

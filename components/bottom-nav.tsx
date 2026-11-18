@@ -22,8 +22,8 @@ type BottomNavProps = {
 
 export function BottomNav({ active, onChange }: BottomNavProps) {
   return (
-    <nav className="app-chrome border-t border-border pb-[env(safe-area-inset-bottom)]">
-      <div className="mx-auto grid max-w-[34rem] grid-cols-3 items-end pt-2">
+    <nav className="app-chrome shrink-0 border-t border-border pb-[max(0.5rem,env(safe-area-inset-bottom,0px))]">
+      <div className="mx-auto grid max-w-[34rem] grid-cols-3 pt-1">
         {TABS.map((tab) => {
           const Icon = tab.icon;
           const isActive = active === tab.id;
@@ -33,7 +33,7 @@ export function BottomNav({ active, onChange }: BottomNavProps) {
               type="button"
               onClick={() => onChange(tab.id)}
               className={cn(
-                "pressable relative flex min-h-14 flex-col items-center justify-center gap-1 px-1 pt-1.5 pb-2.5 leading-none transition-colors",
+                "pressable relative flex h-14 flex-col items-center justify-center gap-1 px-1 leading-none transition-colors",
                 isActive ? "text-foreground" : "text-muted-foreground",
               )}
               aria-current={isActive ? "page" : undefined}
@@ -44,7 +44,7 @@ export function BottomNav({ active, onChange }: BottomNavProps) {
               </span>
               {isActive && (
                 <span
-                  className="absolute bottom-1.5 h-0.5 w-6 rounded-full bg-primary shadow-[0_0_8px_2px_rgb(255_51_0_/_0.55)]"
+                  className="absolute bottom-1 h-0.5 w-6 rounded-full bg-primary shadow-[0_0_8px_2px_rgb(255_51_0_/_0.55)]"
                   aria-hidden
                 />
               )}

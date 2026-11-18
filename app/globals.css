@@ -122,12 +122,6 @@ textarea {
   border-color: var(--border);
 }
 
-/* iOS 15.6+: dvh with vh fallback (Tailwind alone can't cascade both). */
-.app-viewport {
-  height: 100vh;
-  height: 100dvh;
-}
-
 .sheet-max-height {
   max-height: calc(100vh - 6rem);
   max-height: calc(100dvh - 6rem);
