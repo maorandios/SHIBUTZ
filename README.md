@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# שיבוץ עובדים (OVDIM)
 
-## Getting Started
+אפליקציית Progressive Web App בעברית (RTL) לשיבוץ יומי של עובדי בניין לאתרי עבודה.
 
-First, run the development server:
+כל הנתונים נשמרים מקומית ב־`localStorage` במכשיר בלבד — ללא שרת, ללא התחברות וללא סנכרון בענן.
+
+## התקנה מקומית
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+פתחו את [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## בנייה ובדיקות
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run lint
+npm run typecheck
+npm run build
+```
 
-## Learn More
+הפרויקט מוגדר כ־static export (`output: 'export'`). תוצאת הבנייה נמצאת בתיקיית `out/`.
 
-To learn more about Next.js, take a look at the following resources:
+## פריסה ל־Vercel
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. העלו את הריפו ל־GitHub (או חברו את התיקייה ל־Vercel).
+2. צרו פרויקט חדש ב־Vercel ובחרו Framework Preset: **Next.js**.
+3. השאירו את פקודת הבנייה כ־`npm run build` ואת תיקיית הפלט כברירת המחדל של Next (Vercel מזהה static export אוטומטית).
+4. אחרי הפריסה, פתחו את כתובת האתר ב־Safari / Chrome.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## התקנה ל־iPhone (מסך הבית)
 
-## Deploy on Vercel
+1. פתחו את האתר ב־**Safari**.
+2. לחצו על כפתור **Share** (שיתוף).
+3. בחרו **Add to Home Screen** / **הוסף למסך הבית**.
+4. אשרו את השם **שיבוץ עובדים**.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+האפליקציה תיפתח במצב standalone דמוי אפליקציה.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## התקנה ל־Android
+
+1. פתחו את האתר ב־**Chrome**.
+2. בתפריט (⋮) בחרו **Install app** / **הוסף למסך הבית**, או השתמשו בבאנר ההתקנה אם מופיע.
+
+## חשוב לדעת
+
+- הנתונים נשארים במכשיר הנוכחי בלבד ואינם מסונכרנים בין מכשירים.
+- שיתוף לוואטסאפ דורש את אפליקציית WhatsApp / חיבור מתאים; שאר השימוש באפליקציה עובד גם במצב לא מקוון אחרי טעינה ראשונה.
