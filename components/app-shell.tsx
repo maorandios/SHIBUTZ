@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { BottomNav, tabIndex, type AppTab } from "@/components/bottom-nav";
 import { DateSelector } from "@/components/date-selector";
 import { HomePanel } from "@/components/home-panel";
+import { InstallBanner } from "@/components/install-banner";
 import { NoticeToast } from "@/components/notice-toast";
 import { SiteAssignSheet } from "@/components/site-assign-sheet";
 import { SitesPanel } from "@/components/sites-panel";
@@ -172,6 +173,7 @@ export function AppShell() {
       </div>
 
       <div className="z-40 shrink-0">
+        <InstallBanner />
         <BottomNav active={tab} onChange={setTab} />
       </div>
 

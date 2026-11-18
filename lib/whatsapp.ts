@@ -6,6 +6,15 @@ import {
 import { formatDisplayDate } from "./dates";
 import type { AppData } from "./types";
 
+/** Force RTL so WhatsApp Desktop doesn't left-align lines that start with digits. */
+const RLM = "\u200F";
+const RLI = "\u2067";
+const PDI = "\u2069";
+
+function rtlLine(text: string): string {
+  return text.length > 0 ? `${RLM}${text}` : text;
+}
+
 export function buildWhatsAppMessage(
   data: AppData,
   dateKey: string,
@@ -18,7 +27,7 @@ export function buildWhatsAppMessage(
     siteIds && siteIds.length > 0 ? new Set(siteIds) : null;
 
   const lines: string[] = [
-    `עובדים-געש — ${formatDisplayDate(dateKey)}`,
+    rtlLine(`עובדים-געש — ${formatDisplayDate(dateKey)}`),
     "",
   ];
 
@@ -27,15 +36,18 @@ export function buildWhatsAppMessage(
     const workers = getWorkersForSite(data, dateKey, site.id);
     if (workers.length === 0) continue;
 
-    lines.push(`*${site.name}*`);
+    lines.push(rtlLine(`*${site.name}*`));
     workers.forEach((worker, index) => {
-      lines.push(`${index + 1}. ${worker.name}`);
+      // Trailing RLM after the number keeps "1. שם" as one RTL run on desktop.
+      lines.push(rtlLine(`${index + 1}.${RLM} ${worker.name}`));
     });
     lines.push("");
   }
 
-  const message = lines.join("\n").trim();
-  return message.length > 0 ? message : null;
+  const body = lines.join("\n").trim();
+  if (!body) return null;
+
+  return `${RLI}${body}${PDI}`;
 }
 
 export function buildWhatsAppUrl(message: string): string {
