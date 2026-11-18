@@ -20,7 +20,7 @@ import { tomorrowLocal } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 
 const HEADER_TITLES: Record<AppTab, string> = {
-  home: "שיבוץ עובדים",
+  home: "עובדים-געש",
   sites: "אתרים",
   workers: "עובדים",
 };

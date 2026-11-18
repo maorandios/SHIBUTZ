@@ -18,7 +18,7 @@ export function buildWhatsAppMessage(
     siteIds && siteIds.length > 0 ? new Set(siteIds) : null;
 
   const lines: string[] = [
-    `📋 שיבוץ עובדים — ${formatDisplayDate(dateKey)}`,
+    `📋 עובדים-געש — ${formatDisplayDate(dateKey)}`,
     "",
   ];
 

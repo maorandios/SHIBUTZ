@@ -1,13 +1,13 @@
 {
-  "name": "שיבוץ עובדים",
-  "short_name": "עובדים",
+  "name": "עובדים-געש",
+  "short_name": "עובדים-געש",
   "lang": "he",
   "dir": "rtl",
   "display": "standalone",
   "start_url": "/",
   "scope": "/",
   "theme_color": "#FFFDFB",
-  "background_color": "#FFFDFB",
+  "background_color": "#ff3300",
   "icons": [
     {
       "src": "/icons/icon-192.png",
