@@ -40,7 +40,7 @@ export function EntityManager({
 
   return (
     <>
-      <ul className="overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10">
+      <ul className="overflow-hidden rounded-xl border border-border bg-card">
         {entities.map((entity) => (
           <li
             key={entity.id}

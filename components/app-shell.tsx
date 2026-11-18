@@ -107,8 +107,8 @@ export function AppShell() {
             transitionTimingFunction: "var(--ease-nav)",
           }}
         >
-          <div className="overflow-hidden">
-            <div className="space-y-3 px-4 pb-3">
+          <div className="min-h-0 overflow-hidden">
+            <div className="space-y-3 px-4 pb-3 pt-1">
               <DateSelector
                 dateKey={dateKey}
                 onChange={setDateKey}

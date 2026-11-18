@@ -67,11 +67,9 @@ export function SiteCard({
       onPointerLeave={endPress}
       onContextMenu={(event) => event.preventDefault()}
       className={cn(
-        "pressable min-h-[4.5rem] w-full rounded-xl bg-card px-4 py-4 text-right ring-1 transition-colors",
+        "pressable min-h-[4.5rem] w-full rounded-xl border bg-card px-4 py-4 text-right transition-colors",
         "hover:bg-accent active:bg-accent",
-        selected
-          ? "ring-2 ring-primary"
-          : "ring-foreground/10",
+        selected ? "border-primary" : "border-border",
       )}
     >
       <div className="flex items-center gap-3">

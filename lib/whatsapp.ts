@@ -18,7 +18,7 @@ export function buildWhatsAppMessage(
     siteIds && siteIds.length > 0 ? new Set(siteIds) : null;
 
   const lines: string[] = [
-    `📋 עובדים-געש — ${formatDisplayDate(dateKey)}`,
+    `עובדים-געש — ${formatDisplayDate(dateKey)}`,
     "",
   ];
 
@@ -27,7 +27,7 @@ export function buildWhatsAppMessage(
     const workers = getWorkersForSite(data, dateKey, site.id);
     if (workers.length === 0) continue;
 
-    lines.push(`📍 *${site.name}*`);
+    lines.push(`*${site.name}*`);
     workers.forEach((worker, index) => {
       lines.push(`${index + 1}. ${worker.name}`);
     });

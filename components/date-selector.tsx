@@ -33,7 +33,7 @@ export function DateSelector({
 
   return (
     <>
-      <div className="flex items-center gap-1 rounded-xl bg-card p-1 ring-1 ring-foreground/10">
+      <div className="flex items-center gap-1 rounded-xl border border-border bg-card p-1">
         <Button
           type="button"
           variant="ghost"

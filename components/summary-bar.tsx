@@ -17,7 +17,7 @@ function Stat({
   icon: LucideIcon;
 }) {
   return (
-    <div className="flex aspect-square flex-col items-center justify-center rounded-xl bg-card px-2 py-2 ring-1 ring-foreground/10">
+    <div className="flex aspect-square flex-col items-center justify-center rounded-xl border border-border bg-card px-2 py-2">
       <Icon className="mb-2.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
       <span className="text-2xl font-semibold tabular-nums leading-none text-foreground">
         {value}
