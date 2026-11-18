@@ -54,6 +54,55 @@ export function buildWhatsAppUrl(message: string): string {
   return `https://wa.me/?text=${encodeURIComponent(message)}`;
 }
 
+export function buildWhatsAppNativeUrl(message: string): string {
+  return `whatsapp://send?text=${encodeURIComponent(message)}`;
+}
+
+function isStandalonePwa(): boolean {
+  if (typeof window === "undefined") return false;
+  if (window.matchMedia("(display-mode: standalone)").matches) return true;
+  if (window.matchMedia("(display-mode: fullscreen)").matches) return true;
+  if (window.matchMedia("(display-mode: minimal-ui)").matches) return true;
+  // iOS Safari "Add to Home Screen"
+  if (
+    "standalone" in navigator &&
+    Boolean((navigator as Navigator & { standalone?: boolean }).standalone)
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Open WhatsApp share without leaving a blank in-app page in installed PWAs.
+ * Standalone Android uses an intent handoff; browser tabs use a normal new tab.
+ */
+export function openWhatsAppShare(message: string): void {
+  const encoded = encodeURIComponent(message);
+  const httpsUrl = `https://wa.me/?text=${encoded}`;
+
+  if (isStandalonePwa()) {
+    if (/Android/i.test(navigator.userAgent)) {
+      // Hands off to the WhatsApp app instead of opening a blank PWA browser page.
+      const intentUrl =
+        `intent://send?text=${encoded}#Intent;` +
+        "scheme=whatsapp;package=com.whatsapp;" +
+        `S.browser_fallback_url=${encodeURIComponent(httpsUrl)};end`;
+      window.location.assign(intentUrl);
+      return;
+    }
+
+    // iOS home-screen PWA: native scheme avoids an intermediate Safari sheet.
+    window.location.assign(buildWhatsAppNativeUrl(message));
+    return;
+  }
+
+  const opened = window.open(httpsUrl, "_blank", "noopener,noreferrer");
+  if (!opened) {
+    window.location.assign(httpsUrl);
+  }
+}
+
 export async function copyTextToClipboard(text: string): Promise<boolean> {
   if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
     try {

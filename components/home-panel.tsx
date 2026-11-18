@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { MessageCircle, X } from "lucide-react";
 import { SiteCard } from "@/components/site-card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { getSiteWorkerCount } from "@/lib/assignments";
 import { cn } from "@/lib/utils";
 import {
   buildWhatsAppMessage,
-  buildWhatsAppUrl,
+  openWhatsAppShare,
 } from "@/lib/whatsapp";
 import type { AppData } from "@/lib/types";
 
@@ -27,6 +27,7 @@ export function HomePanel({
 }: HomePanelProps) {
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const sharedRef = useRef(false);
 
   const selectedMessage = useMemo(() => {
     if (!selectionMode || selectedIds.size === 0) return null;
@@ -57,12 +58,32 @@ export function HomePanel({
       onNotice?.("אין שיבוצים באתרים שנבחרו", "info");
       return;
     }
-    window.open(
-      buildWhatsAppUrl(selectedMessage),
-      "_blank",
-      "noopener,noreferrer",
-    );
+
+    const message = selectedMessage;
+    sharedRef.current = true;
+    // Leave share UI immediately so return-from-WhatsApp shows the home list.
+    exitSelection();
+    openWhatsAppShare(message);
   };
+
+  useEffect(() => {
+    const clearAfterReturn = () => {
+      if (document.visibilityState !== "visible") return;
+      if (!sharedRef.current) return;
+      sharedRef.current = false;
+      exitSelection();
+    };
+
+    document.addEventListener("visibilitychange", clearAfterReturn);
+    window.addEventListener("focus", clearAfterReturn);
+    window.addEventListener("pageshow", clearAfterReturn);
+
+    return () => {
+      document.removeEventListener("visibilitychange", clearAfterReturn);
+      window.removeEventListener("focus", clearAfterReturn);
+      window.removeEventListener("pageshow", clearAfterReturn);
+    };
+  }, []);
 
   return (
     <div className="flex h-full flex-col">
