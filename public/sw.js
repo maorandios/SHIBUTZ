@@ -69,6 +69,14 @@ self.addEventListener("push", (event) => {
         dir: "rtl",
         lang: "he",
       });
+
+      const clientsList = await self.clients.matchAll({
+        type: "window",
+        includeUncontrolled: true,
+      });
+      for (const client of clientsList) {
+        client.postMessage({ type: "OVDIM_DATA_SYNC" });
+      }
     })(),
   );
 });

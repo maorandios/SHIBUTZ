@@ -52,20 +52,33 @@ export function useAppData() {
   useEffect(() => {
     if (!snapshot.user) return;
 
-    const onFocus = () => {
+    const sync = () => {
       void refreshFromServer();
     };
+
     const onVisibility = () => {
-      if (document.visibilityState === "visible") {
-        void refreshFromServer();
-      }
+      if (document.visibilityState === "visible") sync();
     };
 
-    window.addEventListener("focus", onFocus);
+    const onSwMessage = (event: MessageEvent) => {
+      if (event.data?.type === "OVDIM_DATA_SYNC") sync();
+    };
+
+    // Live shared state — poll while the tab is open; also sync on focus/push.
+    sync();
+    const poll = window.setInterval(() => {
+      if (document.visibilityState === "visible") sync();
+    }, 2000);
+
+    window.addEventListener("focus", sync);
     document.addEventListener("visibilitychange", onVisibility);
+    navigator.serviceWorker?.addEventListener("message", onSwMessage);
+
     return () => {
-      window.removeEventListener("focus", onFocus);
+      window.clearInterval(poll);
+      window.removeEventListener("focus", sync);
       document.removeEventListener("visibilitychange", onVisibility);
+      navigator.serviceWorker?.removeEventListener("message", onSwMessage);
     };
   }, [snapshot.user]);
 

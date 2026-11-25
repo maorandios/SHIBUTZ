@@ -11,21 +11,40 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   return output;
 }
 
+function canUsePush(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    "serviceWorker" in navigator &&
+    "PushManager" in window &&
+    "Notification" in window
+  );
+}
+
+/**
+ * Always try to keep push active (desktop + mobile).
+ * Browsers still require a one-time system permission grant — that cannot be skipped.
+ */
 export async function ensurePushSubscription(): Promise<boolean> {
-  if (typeof window === "undefined") return false;
-  if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-    return false;
-  }
+  if (!canUsePush()) return false;
 
   const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
   if (!publicKey) return false;
 
-  const permission = await Notification.requestPermission();
-  if (permission !== "granted") return false;
+  if (Notification.permission === "denied") {
+    return false;
+  }
 
-  const registration = await navigator.serviceWorker.ready;
+  if (Notification.permission === "default") {
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") return false;
+  }
+
+  const registration = await navigator.serviceWorker.register("/sw.js", {
+    scope: "/",
+  });
+  await navigator.serviceWorker.ready;
+
   let subscription = await registration.pushManager.getSubscription();
-
   if (!subscription) {
     subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,

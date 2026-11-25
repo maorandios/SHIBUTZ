@@ -13,7 +13,7 @@ export function ServiceWorkerRegister() {
       window.location.hostname === "localhost" ||
       window.location.hostname === "127.0.0.1";
 
-    // In local development, unregister any existing SW so HMR/CSS updates aren't blocked.
+    // Keep SW off on localhost so HMR/CSS aren't blocked; push needs production HTTPS.
     if (isLocalDev) {
       void navigator.serviceWorker.getRegistrations().then((registrations) => {
         for (const registration of registrations) {
@@ -34,22 +34,8 @@ export function ServiceWorkerRegister() {
 
     const register = async () => {
       try {
-        const registration = await navigator.serviceWorker.register("/sw.js", {
-          scope: "/",
-        });
-
-        registration.addEventListener("updatefound", () => {
-          const installing = registration.installing;
-          if (!installing) return;
-          installing.addEventListener("statechange", () => {
-            if (
-              installing.state === "installed" &&
-              navigator.serviceWorker.controller
-            ) {
-              // New version ready — activate on next navigation/reload.
-            }
-          });
-        });
+        // Desktop + mobile: SW required for Web Push in the browser/PWA.
+        await navigator.serviceWorker.register("/sw.js", { scope: "/" });
       } catch {
         // Silent failure — app still works online without SW.
       }

@@ -207,9 +207,13 @@ export async function logout(): Promise<void> {
   emit();
 }
 
+/** Pull shared data. Only applies when server revision is newer (live sync safe). */
 export async function refreshFromServer(): Promise<boolean> {
   try {
     const payload = await fetchData();
+    if (payload.revision <= revision) {
+      return true;
+    }
     memoryData = payload.data;
     revision = payload.revision;
     lastError = null;
