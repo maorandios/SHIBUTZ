@@ -5,16 +5,33 @@ let redis: Redis | null = null;
 /** In-memory fallback for local dev when Upstash env vars are missing. */
 const memory = new Map<string, unknown>();
 
-export function hasRedisEnv(): boolean {
-  return Boolean(
-    process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN,
+function redisUrl(): string | undefined {
+  return (
+    process.env.KV_REST_API_URL ||
+    process.env.UPSTASH_REDIS_REST_URL ||
+    undefined
   );
+}
+
+function redisToken(): string | undefined {
+  return (
+    process.env.KV_REST_API_TOKEN ||
+    process.env.UPSTASH_REDIS_REST_TOKEN ||
+    undefined
+  );
+}
+
+export function hasRedisEnv(): boolean {
+  return Boolean(redisUrl() && redisToken());
 }
 
 export function getRedis(): Redis | null {
   if (!hasRedisEnv()) return null;
   if (!redis) {
-    redis = Redis.fromEnv();
+    redis = new Redis({
+      url: redisUrl()!,
+      token: redisToken()!,
+    });
   }
   return redis;
 }
