@@ -1,5 +1,7 @@
 "use client";
 
+import { VAPID_PUBLIC_KEY } from "@/lib/push-public";
+
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
@@ -21,45 +23,65 @@ function canUsePush(): boolean {
 }
 
 /**
- * Always try to keep push active (desktop + mobile).
- * Browsers still require a one-time system permission grant — that cannot be skipped.
+ * Must be called from a user gesture (click) the first time for Chrome desktop.
+ * Keeps subscription active on desktop and mobile.
  */
-export async function ensurePushSubscription(): Promise<boolean> {
-  if (!canUsePush()) return false;
+export async function ensurePushSubscription(): Promise<{
+  ok: boolean;
+  reason?: string;
+}> {
+  if (!canUsePush()) {
+    return { ok: false, reason: "unsupported" };
+  }
 
-  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-  if (!publicKey) return false;
+  const publicKey =
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || VAPID_PUBLIC_KEY;
+  if (!publicKey) {
+    return { ok: false, reason: "missing-vapid-public" };
+  }
 
   if (Notification.permission === "denied") {
-    return false;
+    return { ok: false, reason: "denied" };
   }
 
-  if (Notification.permission === "default") {
+  if (Notification.permission !== "granted") {
     const permission = await Notification.requestPermission();
-    if (permission !== "granted") return false;
+    if (permission !== "granted") {
+      return { ok: false, reason: "permission-not-granted" };
+    }
   }
 
-  const registration = await navigator.serviceWorker.register("/sw.js", {
-    scope: "/",
-  });
-  await navigator.serviceWorker.ready;
-
-  let subscription = await registration.pushManager.getSubscription();
-  if (!subscription) {
-    subscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(publicKey) as BufferSource,
+  try {
+    const registration = await navigator.serviceWorker.register("/sw.js", {
+      scope: "/",
     });
+    await navigator.serviceWorker.ready;
+
+    let subscription = await registration.pushManager.getSubscription();
+    if (!subscription) {
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(
+          publicKey,
+        ) as BufferSource,
+      });
+    }
+
+    const response = await fetch("/api/push/subscribe", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ subscription: subscription.toJSON() }),
+    });
+
+    if (!response.ok) {
+      return { ok: false, reason: "subscribe-api-failed" };
+    }
+
+    return { ok: true };
+  } catch {
+    return { ok: false, reason: "subscribe-threw" };
   }
-
-  const response = await fetch("/api/push/subscribe", {
-    method: "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ subscription: subscription.toJSON() }),
-  });
-
-  return response.ok;
 }
 
 export async function notifySiteAssignment(siteName: string): Promise<void> {

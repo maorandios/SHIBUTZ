@@ -39,11 +39,12 @@ npm run build
 1. חברו את הריפו ל־Vercel (Framework: **Next.js**).
 2. הוסיפו לโปรיקט **Upstash Redis** מ־Vercel Marketplace / Storage (נוצרים `UPSTASH_REDIS_REST_URL` ו־`UPSTASH_REDIS_REST_TOKEN`).
 3. הוסיפו משתנה סביבה `SESSION_SECRET` (מחרוזת ארוכה ואקראית).
-4. הוסיפו משתני **Web Push** מ־`.env.example`:
+4. הוסיפו משתני **Web Push** (חובה לפוש) מ־`.env.example`:
    - `NEXT_PUBLIC_VAPID_PUBLIC_KEY`
    - `VAPID_PRIVATE_KEY`
-   - `VAPID_SUBJECT`
-5. Deploy מחדש.
+   - `VAPID_SUBJECT`  
+   בלי `VAPID_PRIVATE_KEY` ב־Vercel הפוש לא יישלח.
+5. Deploy מחדש. אחרי כניסה בדפדפן — אשרו התראות בחלון של Chrome (חד־פעמי).
 
 ### התראות Push
 

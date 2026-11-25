@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Bell } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { ensurePushSubscription } from "@/lib/push-client";
 
 type PushEnableProps = {
@@ -8,36 +10,69 @@ type PushEnableProps = {
 };
 
 /**
- * Keeps Web Push subscribed whenever the user is logged in (desktop + mobile).
- * No in-app off switch — browsers only allow a one-time system permission prompt.
+ * Re-subscribe when already granted. First-time permission must come from a click
+ * (see login button / enable button) — Chrome desktop blocks requestPermission without a gesture.
  */
 export function PushEnable({ enabled }: PushEnableProps) {
+  const [needsClick, setNeedsClick] = useState(false);
+  const [busy, setBusy] = useState(false);
+
   useEffect(() => {
     if (!enabled) return;
     if (typeof window === "undefined") return;
+    if (!("Notification" in window)) return;
 
-    const activate = () => {
-      void ensurePushSubscription();
+    const sync = () => {
+      if (Notification.permission === "granted") {
+        setNeedsClick(false);
+        void ensurePushSubscription();
+      } else if (Notification.permission === "default") {
+        setNeedsClick(true);
+      } else {
+        setNeedsClick(false);
+      }
     };
 
-    activate();
+    sync();
 
     const onVisible = () => {
-      if (document.visibilityState === "visible") activate();
+      if (document.visibilityState === "visible") sync();
     };
-    const onFocus = () => activate();
 
     document.addEventListener("visibilitychange", onVisible);
-    window.addEventListener("focus", onFocus);
-
-    const interval = window.setInterval(activate, 60_000);
+    window.addEventListener("focus", sync);
+    const interval = window.setInterval(sync, 60_000);
 
     return () => {
       document.removeEventListener("visibilitychange", onVisible);
-      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("focus", sync);
       window.clearInterval(interval);
     };
   }, [enabled]);
 
-  return null;
+  if (!enabled || !needsClick) return null;
+
+  return (
+    <div className="border-b border-border bg-muted/40 px-4 py-2">
+      <Button
+        type="button"
+        variant="secondary"
+        size="sm"
+        className="pressable w-full"
+        disabled={busy}
+        onClick={() => {
+          setBusy(true);
+          void ensurePushSubscription().finally(() => {
+            setBusy(false);
+            if (typeof Notification !== "undefined") {
+              setNeedsClick(Notification.permission !== "granted");
+            }
+          });
+        }}
+      >
+        <Bell className="size-4" />
+        {busy ? "מפעיל התראות..." : "הפעלת התראות שיבוץ"}
+      </Button>
+    </div>
+  );
 }

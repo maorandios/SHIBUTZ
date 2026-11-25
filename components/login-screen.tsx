@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { loginWithPhone } from "@/lib/app-store";
+import { ensurePushSubscription } from "@/lib/push-client";
 
 type LoginScreenProps = {
   onLoggedIn: (fullName: string) => void;
@@ -20,11 +21,24 @@ export function LoginScreen({ onLoggedIn }: LoginScreenProps) {
     setError(null);
     setPending(true);
     try {
+      // Must await permission inside the click gesture — Chrome desktop rejects
+      // Notification.requestPermission() if it runs after an async login gap.
+      if (
+        typeof window !== "undefined" &&
+        "Notification" in window &&
+        Notification.permission === "default"
+      ) {
+        await Notification.requestPermission();
+      }
+
       const result = await loginWithPhone(phoneNumber);
       if (!result.ok) {
         setError(result.error);
         return;
       }
+
+      // Session cookie exists — register SW + store subscription in Redis.
+      await ensurePushSubscription();
       onLoggedIn(result.fullName);
     } finally {
       setPending(false);

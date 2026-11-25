@@ -29,11 +29,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "חסר שם אתר" }, { status: 400 });
   }
 
+  // Notify every subscribed device, including the one that saved (needed for desktop testing
+  // and so all open browsers get the system notification).
   const result = await notifySiteAssignmentUpdate({
     actorName: user.fullName,
     siteName,
-    excludePhoneNumber: user.phoneNumber,
   });
+
+  if (!result.vapidConfigured) {
+    return NextResponse.json(
+      {
+        ...result,
+        error:
+          "VAPID_PRIVATE_KEY חסר ב-Vercel — הוסיפו מ-.env.example ועשו Redeploy",
+      },
+      { status: 503 },
+    );
+  }
 
   return NextResponse.json(result);
 }

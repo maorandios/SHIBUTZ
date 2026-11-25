@@ -1,5 +1,5 @@
 /* Offline shell + Web Push for עובדים-געש */
-const CACHE_VERSION = "ovdim-shell-v4";
+const CACHE_VERSION = "ovdim-shell-v5";
 const PRECACHE_URLS = [
   "/",
   "/manifest.webmanifest",
