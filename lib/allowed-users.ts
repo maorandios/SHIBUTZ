@@ -10,6 +10,10 @@ export const ALLOWED_USERS: AllowedUser[] = [
     idNumber: "301201101",
     fullName: "דידי מוסאי",
   },
+  {
+    idNumber: "101201301",
+    fullName: "מאור כהן",
+  },
 ];
 
 export function normalizeIdNumber(raw: string): string {
