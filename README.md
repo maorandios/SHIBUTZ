@@ -39,7 +39,20 @@ npm run build
 1. חברו את הריפו ל־Vercel (Framework: **Next.js**).
 2. הוסיפו לโปรיקט **Upstash Redis** מ־Vercel Marketplace / Storage (נוצרים `UPSTASH_REDIS_REST_URL` ו־`UPSTASH_REDIS_REST_TOKEN`).
 3. הוסיפו משתנה סביבה `SESSION_SECRET` (מחרוזת ארוכה ואקראית).
-4. Deploy מחדש.
+4. הוסיפו משתני **Web Push** מ־`.env.example`:
+   - `NEXT_PUBLIC_VAPID_PUBLIC_KEY`
+   - `VAPID_PRIVATE_KEY`
+   - `VAPID_SUBJECT`
+5. Deploy מחדש.
+
+### התראות Push
+
+אחרי התקנת ה־PWA לטלפון וכניסה, האפליקציה תבקש אישור להתראות.
+בכל שמירה/איפוס שיבוץ לאתר, שאר המשתמשים יקבלו:
+
+`{שם המשתמש} עדכן שיבוץ עבור אתר {שם האתר}`
+
+ב־iPhone נדרש iOS 16.4+ והתקנה למסך הבית.
 
 ## התקנה ל־iPhone (מסך הבית)
 

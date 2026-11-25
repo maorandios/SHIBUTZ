@@ -1,5 +1,5 @@
-/* Minimal offline app-shell service worker for שיבוץ עובדים */
-const CACHE_VERSION = "ovdim-shell-v3";
+/* Offline shell + Web Push for עובדים-געש */
+const CACHE_VERSION = "ovdim-shell-v4";
 const PRECACHE_URLS = [
   "/",
   "/manifest.webmanifest",
@@ -35,6 +35,70 @@ self.addEventListener("activate", (event) => {
           .map((key) => caches.delete(key)),
       );
       await self.clients.claim();
+    })(),
+  );
+});
+
+self.addEventListener("push", (event) => {
+  event.waitUntil(
+    (async () => {
+      let title = "עובדים-געש";
+      let body = "יש עדכון שיבוץ";
+      let url = "/";
+
+      try {
+        if (event.data) {
+          const payload = event.data.json();
+          if (payload.title) title = String(payload.title);
+          if (payload.body) body = String(payload.body);
+          if (payload.url) url = String(payload.url);
+        }
+      } catch {
+        try {
+          body = event.data ? event.data.text() : body;
+        } catch {
+          // keep defaults
+        }
+      }
+
+      await self.registration.showNotification(title, {
+        body,
+        icon: "/icons/icon-192.png",
+        badge: "/icons/icon-192.png",
+        data: { url },
+        dir: "rtl",
+        lang: "he",
+      });
+    })(),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const targetUrl = event.notification.data?.url || "/";
+
+  event.waitUntil(
+    (async () => {
+      const allClients = await self.clients.matchAll({
+        type: "window",
+        includeUncontrolled: true,
+      });
+
+      for (const client of allClients) {
+        if ("focus" in client) {
+          await client.focus();
+          if ("navigate" in client) {
+            try {
+              await client.navigate(targetUrl);
+            } catch {
+              // ignore navigate failures
+            }
+          }
+          return;
+        }
+      }
+
+      await self.clients.openWindow(targetUrl);
     })(),
   );
 });

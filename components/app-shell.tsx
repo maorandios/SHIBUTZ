@@ -8,12 +8,14 @@ import { HomePanel } from "@/components/home-panel";
 import { InstallBanner } from "@/components/install-banner";
 import { LoginScreen } from "@/components/login-screen";
 import { NoticeToast } from "@/components/notice-toast";
+import { PushEnable } from "@/components/push-enable";
 import { SiteAssignSheet } from "@/components/site-assign-sheet";
 import { SitesPanel } from "@/components/sites-panel";
 import { SummaryBar } from "@/components/summary-bar";
 import { WorkersPanel } from "@/components/workers-panel";
 import { Button } from "@/components/ui/button";
 import { useAppData } from "@/hooks/useAppData";
+import { notifySiteAssignment } from "@/lib/push-client";
 import {
   getAssignableWorkersForSite,
   getAssignedCount,
@@ -120,6 +122,7 @@ export function AppShell() {
 
   return (
     <div className="fixed inset-x-0 top-0 bottom-0 mx-auto flex w-full max-w-[34rem] flex-col overflow-hidden bg-background text-foreground">
+      <PushEnable enabled />
       <NoticeToast notice={notice} onDismiss={clearNotice} />
 
       <header className="app-chrome z-30 shrink-0 border-b border-border pt-[env(safe-area-inset-top)]">
@@ -235,15 +238,18 @@ export function AppShell() {
           initialNotes={sheetNotes}
           onClose={() => setActiveSiteId(null)}
           onReset={() => {
+            const siteName = activeSite.name;
             const ok = setSiteWorkers(dateKey, activeSite.id, [], {});
             if (ok) {
               showNotice({
                 type: "success",
-                message: `השיבוץ ל${activeSite.name} אופס`,
+                message: `השיבוץ ל${siteName} אופס`,
               });
+              void notifySiteAssignment(siteName);
             }
           }}
           onSave={(selectedIds, notes) => {
+            const siteName = activeSite.name;
             const ok = setSiteWorkers(
               dateKey,
               activeSite.id,
@@ -254,8 +260,9 @@ export function AppShell() {
             if (ok) {
               showNotice({
                 type: "success",
-                message: `נשמרו ${selectedIds.length} עובדים ל${activeSite.name}`,
+                message: `נשמרו ${selectedIds.length} עובדים ל${siteName}`,
               });
+              void notifySiteAssignment(siteName);
             }
           }}
         />

@@ -32,8 +32,8 @@ export function LoginScreen({ onLoggedIn }: LoginScreenProps) {
   };
 
   return (
-    <div className="fixed inset-x-0 top-0 bottom-0 mx-auto flex w-full max-w-[34rem] flex-col justify-center bg-background px-6 text-foreground">
-      <div className="mx-auto mb-8 flex size-16 items-center justify-center rounded-full bg-primary text-primary-foreground">
+    <div className="fixed inset-x-0 top-0 bottom-0 mx-auto flex w-full max-w-[34rem] flex-col bg-background px-6 pt-[max(15vh,calc(env(safe-area-inset-top,0px)+2rem))] text-foreground">
+      <div className="mx-auto mb-6 flex size-16 items-center justify-center rounded-full bg-primary text-primary-foreground">
         <CircleUserRound className="size-8" aria-hidden />
       </div>
 
@@ -52,7 +52,9 @@ export function LoginScreen({ onLoggedIn }: LoginScreenProps) {
         }}
       >
         <div className="space-y-2">
-          <Label htmlFor="phone-number">מספר טלפון</Label>
+          <Label htmlFor="phone-number" className="block w-full text-center">
+            מספר טלפון
+          </Label>
           <Input
             id="phone-number"
             type="tel"
@@ -63,6 +65,7 @@ export function LoginScreen({ onLoggedIn }: LoginScreenProps) {
             onChange={(event) => setPhoneNumber(event.target.value)}
             disabled={pending}
             autoFocus
+            className="text-center placeholder:text-center"
           />
         </div>
 
