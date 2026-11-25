@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { MessageCircle, X } from "lucide-react";
+import { MessageCircle, RotateCcw, X } from "lucide-react";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { SiteCard } from "@/components/site-card";
 import { Button } from "@/components/ui/button";
 import { getSiteWorkerCount } from "@/lib/assignments";
@@ -16,6 +17,7 @@ type HomePanelProps = {
   data: AppData;
   dateKey: string;
   onOpenSite: (siteId: string) => void;
+  onResetSites?: (siteIds: string[]) => void;
   onNotice?: (message: string, type?: "success" | "error" | "info") => void;
 };
 
@@ -23,10 +25,12 @@ export function HomePanel({
   data,
   dateKey,
   onOpenSite,
+  onResetSites,
   onNotice,
 }: HomePanelProps) {
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
   const sharedRef = useRef(false);
 
   const selectedMessage = useMemo(() => {
@@ -100,32 +104,63 @@ export function HomePanel({
         }}
       >
         <div className="min-h-0 overflow-hidden">
-          <div className="flex gap-2 px-4 py-3">
+          <div className="flex items-center gap-1.5 px-4 py-3">
             <Button
               type="button"
-              className="pressable flex-1"
+              className="pressable min-w-0 flex-1 gap-1.5 px-3"
               size="lg"
               disabled={!selectedMessage}
               onClick={shareSelected}
             >
-              <MessageCircle className="size-4" />
-              שיתוף בוואטסאפ
-              {selectedIds.size > 0 ? ` (${selectedIds.size})` : ""}
+              <MessageCircle className="size-4 shrink-0" />
+              <span className="truncate">
+                וואטסאפ
+                {selectedIds.size > 0 ? ` (${selectedIds.size})` : ""}
+              </span>
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="icon"
+              className="pressable size-12 shrink-0"
+              onClick={exitSelection}
+              aria-label="ביטול"
+            >
+              <X className="size-4" />
             </Button>
             <Button
               type="button"
               variant="secondary"
               size="lg"
-              className="pressable"
-              onClick={exitSelection}
-              aria-label="ביטול"
+              className="pressable shrink-0 gap-1 px-3"
+              disabled={selectedIds.size === 0 || !onResetSites}
+              onClick={() => setResetConfirmOpen(true)}
+              aria-label="אפס הכל"
             >
-              <X className="size-4" />
-              ביטול
+              <RotateCcw className="size-4 shrink-0" />
+              אפס הכל
             </Button>
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={resetConfirmOpen}
+        onOpenChange={setResetConfirmOpen}
+        title="איפוס שיבוץ"
+        description={
+          selectedIds.size === 1
+            ? "לאפס את השיבוץ באתר שנבחר?"
+            : `לאפס את השיבוץ ב-${selectedIds.size} האתרים שנבחרו?`
+        }
+        confirmLabel="אפס הכל"
+        destructive
+        onConfirm={() => {
+          onResetSites?.([...selectedIds]);
+          setResetConfirmOpen(false);
+          exitSelection();
+        }}
+      />
 
       <div className="flex-1 space-y-2 overflow-y-auto px-4 py-4">
         {data.sites.length === 0 ? (

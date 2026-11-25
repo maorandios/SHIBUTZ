@@ -130,14 +130,13 @@ export function AppShell() {
           <h1 className="min-w-0 flex-1 truncate font-heading text-xl font-medium tracking-tight text-foreground">
             {HEADER_TITLES[tab]}
           </h1>
-          <div className="flex shrink-0 items-center gap-1.5 text-sm text-muted-foreground">
+          <div className="flex shrink-0 items-center gap-0.5 text-sm text-muted-foreground">
             <span className="max-w-[9rem] truncate">{user.fullName}</span>
-            <span aria-hidden>·</span>
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              className="pressable size-9 shrink-0 text-muted-foreground"
+              className="pressable size-8 shrink-0 text-muted-foreground"
               aria-label="התנתקות"
               onClick={() => {
                 void logout();
@@ -191,6 +190,27 @@ export function AppShell() {
               data={data}
               dateKey={dateKey}
               onOpenSite={setActiveSiteId}
+              onResetSites={(siteIds) => {
+                const names: string[] = [];
+                for (const siteId of siteIds) {
+                  const site = data.sites.find((row) => row.id === siteId);
+                  if (!site) continue;
+                  const ok = setSiteWorkers(dateKey, siteId, [], {});
+                  if (ok) {
+                    names.push(site.name);
+                    void notifySiteAssignment(site.name);
+                  }
+                }
+                if (names.length > 0) {
+                  showNotice({
+                    type: "success",
+                    message:
+                      names.length === 1
+                        ? `השיבוץ ל${names[0]} אופס`
+                        : `אופס שיבוץ ב-${names.length} אתרים`,
+                  });
+                }
+              }}
               onNotice={(message, type = "info") =>
                 showNotice({ type, message })
               }
