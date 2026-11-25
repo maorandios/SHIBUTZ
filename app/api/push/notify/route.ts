@@ -29,11 +29,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "חסר שם אתר" }, { status: 400 });
   }
 
-  // Notify every subscribed device, including the one that saved (needed for desktop testing
-  // and so all open browsers get the system notification).
+  // Notify other users only — never the actor who saved (any of their devices).
   const result = await notifySiteAssignmentUpdate({
     actorName: user.fullName,
     siteName,
+    excludePhoneNumber: user.phoneNumber,
   });
 
   if (!result.vapidConfigured) {

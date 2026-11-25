@@ -83,7 +83,8 @@ export async function savePushSubscription(
 export async function notifySiteAssignmentUpdate(options: {
   actorName: string;
   siteName: string;
-  excludeEndpoint?: string;
+  /** Skip every device belonging to the user who made the change. */
+  excludePhoneNumber?: string;
 }): Promise<{
   sent: number;
   failed: number;
@@ -111,8 +112,8 @@ export async function notifySiteAssignmentUpdate(options: {
   await Promise.all(
     entries.map(async ([endpoint, row]) => {
       if (
-        options.excludeEndpoint &&
-        endpoint === options.excludeEndpoint
+        options.excludePhoneNumber &&
+        row.phoneNumber === options.excludePhoneNumber
       ) {
         return;
       }
