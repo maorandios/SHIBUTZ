@@ -1,19 +1,23 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { LogOut } from "lucide-react";
 import { BottomNav, tabIndex, type AppTab } from "@/components/bottom-nav";
 import { DateSelector } from "@/components/date-selector";
 import { HomePanel } from "@/components/home-panel";
 import { InstallBanner } from "@/components/install-banner";
+import { LoginScreen } from "@/components/login-screen";
 import { NoticeToast } from "@/components/notice-toast";
 import { SiteAssignSheet } from "@/components/site-assign-sheet";
 import { SitesPanel } from "@/components/sites-panel";
 import { SummaryBar } from "@/components/summary-bar";
 import { WorkersPanel } from "@/components/workers-panel";
+import { Button } from "@/components/ui/button";
 import { useAppData } from "@/hooks/useAppData";
 import {
   getAssignableWorkersForSite,
   getAssignedCount,
+  getNotesForDate,
   getUnassignedWorkers,
   getWorkersForSite,
 } from "@/lib/assignments";
@@ -30,9 +34,12 @@ export function AppShell() {
   const {
     data,
     hydrated,
+    authChecked,
+    user,
     notice,
     showNotice,
     clearNotice,
+    logout,
     setSiteWorkers,
     addWorker,
     bulkAddWorkers,
@@ -64,6 +71,14 @@ export function AppShell() {
   const sheetSelectedIds = activeSite
     ? getWorkersForSite(data, dateKey, activeSite.id).map((worker) => worker.id)
     : [];
+  const sheetNotes = activeSite
+    ? Object.fromEntries(
+        sheetSelectedIds.map((id) => [
+          id,
+          getNotesForDate(data, dateKey)[id] ?? "",
+        ]),
+      )
+    : {};
 
   const datesWithAssignments = useMemo(() => {
     const dates = new Set<string>();
@@ -75,10 +90,28 @@ export function AppShell() {
     return dates;
   }, [data.assignmentsByDate]);
 
-  if (!hydrated) {
+  if (!authChecked) {
     return (
       <div className="flex min-h-[70vh] items-center justify-center text-sm text-neutral-500">
         טוען...
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <LoginScreen
+        onLoggedIn={(fullName) => {
+          showNotice({ type: "success", message: `שלום ${fullName}` });
+        }}
+      />
+    );
+  }
+
+  if (!hydrated) {
+    return (
+      <div className="flex min-h-[70vh] items-center justify-center text-sm text-neutral-500">
+        טוען נתונים...
       </div>
     );
   }
@@ -90,10 +123,26 @@ export function AppShell() {
       <NoticeToast notice={notice} onDismiss={clearNotice} />
 
       <header className="app-chrome z-30 shrink-0 border-b border-border pt-[env(safe-area-inset-top)]">
-        <div className="px-4 py-3">
-          <h1 className="font-heading text-xl font-medium tracking-tight text-foreground">
+        <div className="flex items-center gap-3 px-4 py-3">
+          <h1 className="min-w-0 flex-1 truncate font-heading text-xl font-medium tracking-tight text-foreground">
             {HEADER_TITLES[tab]}
           </h1>
+          <div className="flex shrink-0 items-center gap-1.5 text-sm text-muted-foreground">
+            <span className="max-w-[9rem] truncate">{user.fullName}</span>
+            <span aria-hidden>·</span>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="pressable size-9 shrink-0 text-muted-foreground"
+              aria-label="התנתקות"
+              onClick={() => {
+                void logout();
+              }}
+            >
+              <LogOut className="size-4" />
+            </Button>
+          </div>
         </div>
 
         <div
@@ -183,9 +232,24 @@ export function AppShell() {
           siteName={activeSite.name}
           workers={sheetWorkers}
           initiallySelectedIds={sheetSelectedIds}
+          initialNotes={sheetNotes}
           onClose={() => setActiveSiteId(null)}
-          onSave={(selectedIds) => {
-            const ok = setSiteWorkers(dateKey, activeSite.id, selectedIds);
+          onReset={() => {
+            const ok = setSiteWorkers(dateKey, activeSite.id, [], {});
+            if (ok) {
+              showNotice({
+                type: "success",
+                message: `השיבוץ ל${activeSite.name} אופס`,
+              });
+            }
+          }}
+          onSave={(selectedIds, notes) => {
+            const ok = setSiteWorkers(
+              dateKey,
+              activeSite.id,
+              selectedIds,
+              notes,
+            );
             setActiveSiteId(null);
             if (ok) {
               showNotice({

@@ -9,15 +9,19 @@ import {
   normalizeName,
   removeSiteEverywhere,
   removeWorkerEverywhere,
+  getNotesForDate,
   setSiteWorkers as setSiteWorkersFn,
   unassignWorker as unassignWorkerFn,
 } from "@/lib/assignments";
 import {
   clearAppStoreError,
   commitAppData,
+  ensureHydrated,
   getAppStoreServerSnapshot,
   getAppStoreSnapshot,
+  logout as logoutStore,
   readAppData,
+  refreshFromServer,
   subscribeAppStore,
 } from "@/lib/app-store";
 import { createId } from "@/lib/id";
@@ -38,8 +42,32 @@ export function useAppData() {
   const dataRef = useRef(snapshot.data);
 
   useEffect(() => {
+    void ensureHydrated();
+  }, []);
+
+  useEffect(() => {
     dataRef.current = snapshot.data;
   }, [snapshot.data]);
+
+  useEffect(() => {
+    if (!snapshot.user) return;
+
+    const onFocus = () => {
+      void refreshFromServer();
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") {
+        void refreshFromServer();
+      }
+    };
+
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [snapshot.user]);
 
   const showNotice = useCallback((next: Notice, ms = 3000) => {
     clearAppStoreError();
@@ -103,9 +131,14 @@ export function useAppData() {
   );
 
   const setSiteWorkers = useCallback(
-    (dateKey: string, siteId: string, workerIds: string[]) => {
+    (
+      dateKey: string,
+      siteId: string,
+      workerIds: string[],
+      notes: Record<string, string> = {},
+    ) => {
       return update((current) =>
-        setSiteWorkersFn(current, dateKey, siteId, workerIds),
+        setSiteWorkersFn(current, dateKey, siteId, workerIds, notes),
       );
     },
     [update],
@@ -284,15 +317,23 @@ export function useAppData() {
     [persist, showNotice],
   );
 
+  const logout = useCallback(async () => {
+    await logoutStore();
+  }, []);
+
   return {
     data: snapshot.data,
     hydrated: snapshot.hydrated,
+    authChecked: snapshot.authChecked,
+    user: snapshot.user,
     notice: visibleNotice,
     showNotice,
     clearNotice: () => {
       clearAppStoreError();
       setNoticeState(null);
     },
+    logout,
+    refresh: refreshFromServer,
     assignWorker,
     unassignWorker,
     setSiteWorkers,

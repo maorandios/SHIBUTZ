@@ -1,4 +1,12 @@
-import { EMPTY_APP_DATA, STORAGE_KEY, type AppData, type DayAssignments, type Site, type Worker } from "./types";
+import {
+  EMPTY_APP_DATA,
+  STORAGE_KEY,
+  type AppData,
+  type DayAssignments,
+  type DayNotes,
+  type Site,
+  type Worker,
+} from "./types";
 import { namesEqual, normalizeName } from "./assignments";
 import { cloneData } from "./utils";
 
@@ -120,6 +128,11 @@ export function validateAppData(raw: unknown): StorageResult<AppData> {
     return { ok: false, error: "נתוני השיבוצים בגיבוי אינם תקינים" };
   }
 
+  const notesByDate = validateNotes(raw.notesByDate, workerIds);
+  if (!notesByDate) {
+    return { ok: false, error: "הערות השיבוץ בגיבוי אינן תקינות" };
+  }
+
   return {
     ok: true,
     data: {
@@ -127,8 +140,36 @@ export function validateAppData(raw: unknown): StorageResult<AppData> {
       workers,
       sites,
       assignmentsByDate,
+      notesByDate,
     },
   };
+}
+
+function validateNotes(
+  value: unknown,
+  workerIds: Set<string>,
+): Record<string, DayNotes> | null {
+  if (value === undefined || value === null) return {};
+  if (!isPlainObject(value)) return null;
+
+  const notesByDate: Record<string, DayNotes> = {};
+  for (const [dateKey, dayValue] of Object.entries(value)) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return null;
+    if (!isPlainObject(dayValue)) return null;
+
+    const day: DayNotes = {};
+    for (const [workerId, note] of Object.entries(dayValue)) {
+      if (!isValidId(workerId) || typeof note !== "string") return null;
+      if (!workerIds.has(workerId)) continue;
+      const cleaned = note.trim();
+      if (!cleaned) continue;
+      day[workerId] = cleaned;
+    }
+    if (Object.keys(day).length > 0) {
+      notesByDate[dateKey] = day;
+    }
+  }
+  return notesByDate;
 }
 
 export function loadAppData(): StorageResult<AppData> {

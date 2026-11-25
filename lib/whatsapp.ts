@@ -1,5 +1,6 @@
 import {
   getDayAssignments,
+  getNotesForDate,
   getWorkersForSite,
   sitesInOrder,
 } from "./assignments";
@@ -37,9 +38,12 @@ export function buildWhatsAppMessage(
     if (workers.length === 0) continue;
 
     lines.push(rtlLine(`*${site.name}*`));
+    const notes = getNotesForDate(data, dateKey);
     workers.forEach((worker, index) => {
+      const note = notes[worker.id]?.trim();
+      const label = note ? `${worker.name} — ${note}` : worker.name;
       // Trailing RLM after the number keeps "1. שם" as one RTL run on desktop.
-      lines.push(rtlLine(`${index + 1}.${RLM} ${worker.name}`));
+      lines.push(rtlLine(`${index + 1}.${RLM} ${label}`));
     });
     lines.push("");
   }

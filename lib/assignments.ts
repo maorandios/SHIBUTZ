@@ -99,11 +99,19 @@ export function unassignWorker(
  * Only workers that are unassigned or already on this site may be included.
  * Workers assigned elsewhere are ignored (one site per day).
  */
+export function getNotesForDate(
+  data: AppData,
+  dateKey: string,
+): Record<string, string> {
+  return data.notesByDate?.[dateKey] ?? {};
+}
+
 export function setSiteWorkers(
   data: AppData,
   dateKey: string,
   siteId: string,
   workerIds: string[],
+  notesByWorker: Record<string, string> = {},
 ): AppData | null {
   const siteExists = data.sites.some((site) => site.id === siteId);
   if (!siteExists) return null;
@@ -111,10 +119,12 @@ export function setSiteWorkers(
   const workerIdSet = new Set(data.workers.map((worker) => worker.id));
   const current = getDayAssignments(data, dateKey);
   const nextDay: DayAssignments = { ...current };
+  const removedFromSite: string[] = [];
 
   for (const [workerId, assignedSiteId] of Object.entries(nextDay)) {
     if (assignedSiteId === siteId) {
       delete nextDay[workerId];
+      removedFromSite.push(workerId);
     }
   }
 
@@ -133,7 +143,26 @@ export function setSiteWorkers(
     assignmentsByDate[dateKey] = nextDay;
   }
 
-  return { ...data, assignmentsByDate };
+  const dayNotes = { ...(data.notesByDate?.[dateKey] ?? {}) };
+  for (const workerId of removedFromSite) {
+    if (!uniqueIds.includes(workerId)) {
+      delete dayNotes[workerId];
+    }
+  }
+  for (const workerId of uniqueIds) {
+    const note = (notesByWorker[workerId] ?? "").trim();
+    if (note) dayNotes[workerId] = note;
+    else delete dayNotes[workerId];
+  }
+
+  const notesByDate = { ...(data.notesByDate ?? {}) };
+  if (Object.keys(dayNotes).length === 0) {
+    delete notesByDate[dateKey];
+  } else {
+    notesByDate[dateKey] = dayNotes;
+  }
+
+  return { ...data, assignmentsByDate, notesByDate };
 }
 
 /** Workers eligible for a site sheet: already on this site + currently unassigned. */
@@ -157,10 +186,14 @@ export function clearDayAssignments(
   data: AppData,
   dateKey: string,
 ): AppData {
-  if (!(dateKey in data.assignmentsByDate)) return data;
+  if (!(dateKey in data.assignmentsByDate) && !(dateKey in (data.notesByDate ?? {}))) {
+    return data;
+  }
   const assignmentsByDate = { ...data.assignmentsByDate };
   delete assignmentsByDate[dateKey];
-  return { ...data, assignmentsByDate };
+  const notesByDate = { ...(data.notesByDate ?? {}) };
+  delete notesByDate[dateKey];
+  return { ...data, assignmentsByDate, notesByDate };
 }
 
 /**
@@ -192,6 +225,20 @@ export function copyAssignmentsFromDate(
     };
   }
 
+  const sourceNotes = getNotesForDate(data, sourceDate);
+  const nextNotes: Record<string, string> = {};
+  for (const workerId of Object.keys(nextDay)) {
+    const note = sourceNotes[workerId]?.trim();
+    if (note) nextNotes[workerId] = note;
+  }
+
+  const notesByDate = { ...(data.notesByDate ?? {}) };
+  if (Object.keys(nextNotes).length === 0) {
+    delete notesByDate[targetDate];
+  } else {
+    notesByDate[targetDate] = nextNotes;
+  }
+
   return {
     data: {
       ...data,
@@ -199,6 +246,7 @@ export function copyAssignmentsFromDate(
         ...data.assignmentsByDate,
         [targetDate]: nextDay,
       },
+      notesByDate,
     },
     copiedCount,
   };
@@ -210,6 +258,7 @@ export function removeWorkerEverywhere(
 ): AppData {
   const workers = data.workers.filter((worker) => worker.id !== workerId);
   const assignmentsByDate: AppData["assignmentsByDate"] = {};
+  const notesByDate: AppData["notesByDate"] = {};
 
   for (const [dateKey, day] of Object.entries(data.assignmentsByDate)) {
     if (!(workerId in day)) {
@@ -223,26 +272,56 @@ export function removeWorkerEverywhere(
     }
   }
 
-  return { ...data, workers, assignmentsByDate };
+  for (const [dateKey, day] of Object.entries(data.notesByDate ?? {})) {
+    if (!(workerId in day)) {
+      notesByDate[dateKey] = day;
+      continue;
+    }
+    const nextDay = { ...day };
+    delete nextDay[workerId];
+    if (Object.keys(nextDay).length > 0) {
+      notesByDate[dateKey] = nextDay;
+    }
+  }
+
+  return { ...data, workers, assignmentsByDate, notesByDate };
 }
 
 export function removeSiteEverywhere(data: AppData, siteId: string): AppData {
   const sites = data.sites.filter((site) => site.id !== siteId);
   const assignmentsByDate: AppData["assignmentsByDate"] = {};
+  const notesByDate: AppData["notesByDate"] = {
+    ...(data.notesByDate ?? {}),
+  };
 
   for (const [dateKey, day] of Object.entries(data.assignmentsByDate)) {
     const nextDay: DayAssignments = {};
+    const removedWorkers: string[] = [];
     for (const [workerId, assignedSiteId] of Object.entries(day)) {
       if (assignedSiteId !== siteId) {
         nextDay[workerId] = assignedSiteId;
+      } else {
+        removedWorkers.push(workerId);
       }
     }
     if (Object.keys(nextDay).length > 0) {
       assignmentsByDate[dateKey] = nextDay;
     }
+
+    if (removedWorkers.length > 0 && notesByDate[dateKey]) {
+      const nextNotes = { ...notesByDate[dateKey] };
+      for (const workerId of removedWorkers) {
+        delete nextNotes[workerId];
+      }
+      if (Object.keys(nextNotes).length === 0) {
+        delete notesByDate[dateKey];
+      } else {
+        notesByDate[dateKey] = nextNotes;
+      }
+    }
   }
 
-  return { ...data, sites, assignmentsByDate };
+  return { ...data, sites, assignmentsByDate, notesByDate };
 }
 
 export function normalizeName(name: string): string {
