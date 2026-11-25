@@ -5,14 +5,14 @@ import { CircleUserRound, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { loginWithId } from "@/lib/app-store";
+import { loginWithPhone } from "@/lib/app-store";
 
 type LoginScreenProps = {
   onLoggedIn: (fullName: string) => void;
 };
 
 export function LoginScreen({ onLoggedIn }: LoginScreenProps) {
-  const [idNumber, setIdNumber] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -20,7 +20,7 @@ export function LoginScreen({ onLoggedIn }: LoginScreenProps) {
     setError(null);
     setPending(true);
     try {
-      const result = await loginWithId(idNumber);
+      const result = await loginWithPhone(phoneNumber);
       if (!result.ok) {
         setError(result.error);
         return;
@@ -41,7 +41,7 @@ export function LoginScreen({ onLoggedIn }: LoginScreenProps) {
         עובדים-געש
       </h1>
       <p className="mt-2 text-center text-sm text-muted-foreground">
-        התחברות עם מספר תעודת זהות
+        התחברות עם מספר טלפון
       </p>
 
       <form
@@ -52,14 +52,15 @@ export function LoginScreen({ onLoggedIn }: LoginScreenProps) {
         }}
       >
         <div className="space-y-2">
-          <Label htmlFor="id-number">תעודת זהות</Label>
+          <Label htmlFor="phone-number">מספר טלפון</Label>
           <Input
-            id="id-number"
-            inputMode="numeric"
-            autoComplete="username"
-            placeholder="הזינו מספר תעודת זהות"
-            value={idNumber}
-            onChange={(event) => setIdNumber(event.target.value)}
+            id="phone-number"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            placeholder="הזינו מספר טלפון"
+            value={phoneNumber}
+            onChange={(event) => setPhoneNumber(event.target.value)}
             disabled={pending}
             autoFocus
           />
@@ -75,7 +76,7 @@ export function LoginScreen({ onLoggedIn }: LoginScreenProps) {
           type="submit"
           size="lg"
           className="pressable w-full"
-          disabled={pending || idNumber.trim().length < 5}
+          disabled={pending || phoneNumber.replace(/\D/g, "").length < 9}
         >
           <LogIn className="size-4" />
           {pending ? "מתחבר..." : "כניסה"}

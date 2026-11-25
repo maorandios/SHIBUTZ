@@ -1,11 +1,11 @@
 import { cookies } from "next/headers";
 import type { AllowedUser } from "@/lib/allowed-users";
 
-export const SESSION_COOKIE = "ovdim_session";
+export const SESSION_COOKIE = "ovdim_session_v2";
 const SESSION_DAYS = 60;
 
 type SessionPayload = {
-  idNumber: string;
+  phoneNumber: string;
   fullName: string;
   exp: number;
 };
@@ -69,7 +69,7 @@ async function verify(payloadB64: string, signatureB64: string): Promise<boolean
 
 export async function createSessionToken(user: AllowedUser): Promise<string> {
   const payload: SessionPayload = {
-    idNumber: user.idNumber,
+    phoneNumber: user.phoneNumber,
     fullName: user.fullName,
     exp: Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000,
   };
@@ -89,7 +89,7 @@ export async function readSessionToken(
   try {
     const json = new TextDecoder().decode(fromBase64Url(payloadB64));
     const payload = JSON.parse(json) as SessionPayload;
-    if (!payload?.idNumber || !payload?.fullName || !payload?.exp) return null;
+    if (!payload?.phoneNumber || !payload?.fullName || !payload?.exp) return null;
     if (payload.exp < Date.now()) return null;
     return payload;
   } catch {
@@ -102,7 +102,7 @@ export async function getSessionUser(): Promise<AllowedUser | null> {
   const token = jar.get(SESSION_COOKIE)?.value;
   const session = await readSessionToken(token);
   if (!session) return null;
-  return { idNumber: session.idNumber, fullName: session.fullName };
+  return { phoneNumber: session.phoneNumber, fullName: session.fullName };
 }
 
 export function sessionCookieOptions(token: string) {

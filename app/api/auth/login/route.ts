@@ -10,25 +10,25 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "בקשה לא תקינה" }, { status: 400 });
   }
 
-  const idNumber =
+  const phoneNumber =
     typeof body === "object" &&
     body !== null &&
-    "idNumber" in body &&
-    typeof (body as { idNumber: unknown }).idNumber === "string"
-      ? (body as { idNumber: string }).idNumber
+    "phoneNumber" in body &&
+    typeof (body as { phoneNumber: unknown }).phoneNumber === "string"
+      ? (body as { phoneNumber: string }).phoneNumber
       : "";
 
-  const user = findAllowedUser(idNumber);
+  const user = findAllowedUser(phoneNumber);
   if (!user) {
     return NextResponse.json(
-      { error: "תעודת הזהות אינה מורשית להתחברות" },
+      { error: "מספר הטלפון אינו מורשה להתחברות" },
       { status: 401 },
     );
   }
 
   const token = await createSessionToken(user);
   const response = NextResponse.json({
-    user: { idNumber: user.idNumber, fullName: user.fullName },
+    user: { phoneNumber: user.phoneNumber, fullName: user.fullName },
   });
   response.cookies.set(sessionCookieOptions(token));
   return response;

@@ -8,7 +8,7 @@ type AppStoreSnapshot = {
   hydrated: boolean;
   revision: number;
   lastError: string | null;
-  user: { idNumber: string; fullName: string } | null;
+  user: { phoneNumber: string; fullName: string } | null;
   authChecked: boolean;
 };
 
@@ -93,7 +93,7 @@ async function fetchMe(): Promise<AppStoreSnapshot["user"]> {
   if (response.status === 401) return null;
   if (!response.ok) throw new Error("בדיקת התחברות נכשלה");
   const json = (await response.json()) as {
-    user: { idNumber: string; fullName: string } | null;
+    user: { phoneNumber: string; fullName: string } | null;
   };
   return json.user;
 }
@@ -153,18 +153,18 @@ export function ensureHydrated(): Promise<void> {
   return hydratePromise;
 }
 
-export async function loginWithId(
-  idNumber: string,
+export async function loginWithPhone(
+  phoneNumber: string,
 ): Promise<{ ok: true; fullName: string } | { ok: false; error: string }> {
   const response = await fetch("/api/auth/login", {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ idNumber }),
+    body: JSON.stringify({ phoneNumber }),
   });
   const json = (await response.json().catch(() => ({}))) as {
     error?: string;
-    user?: { fullName: string; idNumber: string };
+    user?: { fullName: string; phoneNumber: string };
   };
 
   if (!response.ok || !json.user) {
