@@ -7,7 +7,7 @@ import {
   type Site,
   type Worker,
 } from "./types";
-import { namesEqual, normalizeName } from "./assignments";
+import { namesEqual, normalizeName, sortByNameHe } from "./assignments";
 import { cloneData } from "./utils";
 
 export type StorageResult<T> =
@@ -137,8 +137,8 @@ export function validateAppData(raw: unknown): StorageResult<AppData> {
     ok: true,
     data: {
       version: 1,
-      workers,
-      sites,
+      workers: sortByNameHe(workers),
+      sites: sortByNameHe(sites),
       assignmentsByDate,
       notesByDate,
     },

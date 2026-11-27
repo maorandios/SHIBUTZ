@@ -16,7 +16,9 @@ export function getUnassignedWorkers(
   dateKey: string,
 ): Worker[] {
   const assigned = getDayAssignments(data, dateKey);
-  return data.workers.filter((worker) => !(worker.id in assigned));
+  return sortByNameHe(
+    data.workers.filter((worker) => !(worker.id in assigned)),
+  );
 }
 
 export function getWorkersForSite(
@@ -30,9 +32,11 @@ export function getWorkersForSite(
     .map(([workerId]) => workerId);
 
   const byId = new Map(data.workers.map((worker) => [worker.id, worker]));
-  return ids
-    .map((id) => byId.get(id))
-    .filter((worker): worker is Worker => Boolean(worker));
+  return sortByNameHe(
+    ids
+      .map((id) => byId.get(id))
+      .filter((worker): worker is Worker => Boolean(worker)),
+  );
 }
 
 export function getSiteWorkerCount(
@@ -175,11 +179,13 @@ export function getAssignableWorkersForSite(
   const unassigned = getUnassignedWorkers(data, dateKey);
   const merged = [...onSite, ...unassigned];
   const seen = new Set<string>();
-  return merged.filter((worker) => {
-    if (seen.has(worker.id)) return false;
-    seen.add(worker.id);
-    return true;
-  });
+  return sortByNameHe(
+    merged.filter((worker) => {
+      if (seen.has(worker.id)) return false;
+      seen.add(worker.id);
+      return true;
+    }),
+  );
 }
 
 export function clearDayAssignments(
@@ -328,6 +334,20 @@ export function normalizeName(name: string): string {
   return name.trim().replace(/\s+/g, " ");
 }
 
+/** Hebrew alphabetical order (א‑ב) for workers/sites lists. */
+export function compareNamesHe(a: string, b: string): number {
+  return normalizeName(a).localeCompare(normalizeName(b), "he", {
+    sensitivity: "base",
+    numeric: true,
+  });
+}
+
+export function sortByNameHe<T extends { name: string }>(items: T[]): T[] {
+  return [...items].sort((left, right) =>
+    compareNamesHe(left.name, right.name),
+  );
+}
+
 export function namesEqual(a: string, b: string): boolean {
   return normalizeName(a).toLocaleLowerCase("he") === normalizeName(b).toLocaleLowerCase("he");
 }
@@ -343,5 +363,5 @@ export function findDuplicateName(
 }
 
 export function sitesInOrder(data: AppData): Site[] {
-  return data.sites;
+  return sortByNameHe(data.sites);
 }

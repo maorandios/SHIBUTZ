@@ -1,5 +1,14 @@
+import { sortByNameHe } from "./assignments";
 import { EMPTY_APP_DATA, type AppData } from "./types";
 import { cloneData } from "./utils";
+
+function withSortedLists(data: AppData): AppData {
+  return {
+    ...data,
+    workers: sortByNameHe(data.workers),
+    sites: sortByNameHe(data.sites),
+  };
+}
 
 type Listener = () => void;
 
@@ -127,7 +136,7 @@ export function ensureHydrated(): Promise<void> {
       }
 
       const payload = await fetchData();
-      memoryData = payload.data;
+      memoryData = withSortedLists(payload.data);
       revision = payload.revision;
       hydrated = true;
       lastError = null;
@@ -180,7 +189,7 @@ export async function loginWithPhone(
 
   try {
     const payload = await fetchData();
-    memoryData = payload.data;
+    memoryData = withSortedLists(payload.data);
     revision = payload.revision;
     hydrated = true;
     lastError = null;
@@ -214,7 +223,7 @@ export async function refreshFromServer(): Promise<boolean> {
     if (payload.revision <= revision) {
       return true;
     }
-    memoryData = payload.data;
+    memoryData = withSortedLists(payload.data);
     revision = payload.revision;
     lastError = null;
     emit();
@@ -230,7 +239,7 @@ export async function refreshFromServer(): Promise<boolean> {
 
 /** Optimistic local update, then persist to shared Redis/API. */
 export function commitAppData(next: AppData): boolean {
-  memoryData = next;
+  memoryData = withSortedLists(next);
   lastError = null;
   emit();
 
@@ -251,7 +260,7 @@ export function commitAppData(next: AppData): boolean {
           data: AppData;
           revision: number;
         };
-        memoryData = json.data;
+        memoryData = withSortedLists(json.data);
         revision = json.revision;
         lastError = "מישהו אחר עדכן — הנתונים רועננו";
         emit();

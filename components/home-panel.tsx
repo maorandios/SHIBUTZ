@@ -5,7 +5,7 @@ import { MessageCircle, RotateCcw, X } from "lucide-react";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { SiteCard } from "@/components/site-card";
 import { Button } from "@/components/ui/button";
-import { getSiteWorkerCount } from "@/lib/assignments";
+import { getSiteWorkerCount, sitesInOrder } from "@/lib/assignments";
 import { cn } from "@/lib/utils";
 import {
   buildWhatsAppMessage,
@@ -169,7 +169,7 @@ export function HomePanel({
           </div>
         ) : (
           <div className="grid gap-2">
-            {data.sites.map((site) => (
+            {sitesInOrder(data).map((site) => (
               <SiteCard
                 key={site.id}
                 site={site}
